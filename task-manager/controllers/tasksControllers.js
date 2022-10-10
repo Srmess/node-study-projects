@@ -1,5 +1,6 @@
 const Task = require('../models/taskModel');
 const asyncWraper = require('../middlewares/async');
+const { CreateCustomError } = require('../errors/custom-error');
 
 const getAllTasks = asyncWraper(async (req, res) => {
   const tasks = await Task.find();
@@ -11,20 +12,20 @@ const createTask = asyncWraper(async (req, res) => {
   res.status(201).json({ task });
 });
 
-const getTask = asyncWraper(async (req, res) => {
+const getTask = asyncWraper(async (req, res, next) => {
   const { id: taskID } = req.params;
   const task = await Task.findOne({ _id: taskID });
 
   if (!task) {
-    return res
-      .status(404)
-      .json({ msg: `A task com o id: ${taskID} não existe` });
+    return next(
+      CreateCustomError(`A task com o id: ${taskID} não existe`, 404)
+    );
   }
 
   res.status(200).json({ task });
 });
 
-const updateTask = asyncWraper(async (req, res) => {
+const updateTask = asyncWraper(async (req, res, next) => {
   const { id: taskID } = req.params;
   const task = await Task.findOneAndUpdate({ _id: taskID }, req.body, {
     new: true,
@@ -32,22 +33,22 @@ const updateTask = asyncWraper(async (req, res) => {
   });
 
   if (!task) {
-    return res
-      .status(404)
-      .json({ msg: `A task com o id: ${taskID} não existe` });
+    return next(
+      CreateCustomError(`A task com o id: ${taskID} não existe`, 404)
+    );
   }
 
   res.status(200).json({ task });
 });
 
-const deleteTask = asyncWraper(async (req, res) => {
+const deleteTask = asyncWraper(async (req, res, next) => {
   const { id: taskID } = req.params;
   const task = await Task.findOneAndDelete({ _id: taskID });
 
   if (!task) {
-    return res
-      .status(404)
-      .json({ msg: `A task com o id: ${taskID} não existe!` });
+    return next(
+      CreateCustomError(`A task com o id: ${taskID} não existe`, 404)
+    );
   }
 
   return res.status(200).json({ msg: 'excluido com sucesso!' });
